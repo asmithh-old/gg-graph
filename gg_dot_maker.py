@@ -1,4 +1,10 @@
-import csv, pandas as pd, itertools, random, operator, numpy as np, math
+import csv, pandas as pd, itertools, random, operator, numpy as np, math, matplotlib.pyplot as plt
+
+##TODO: kick out duplicates from controversy
+##(come up with consistent, defensible set of rules to kick out things that are probably duplicates)
+##wikipedia; articles w/ high inlinks;
+#low-hanging fruit: sort all stories by title & look for duplicate titles
+##if something has 0 inlinks, it's considered lower priority.
 
 links = pd.DataFrame.from_csv('story_links.csv')
 
@@ -87,7 +93,7 @@ def do_random_walks(starts, num_walks, walk_fn):
     #global_counts[x] is number of times the markov chain saw that article x
     return (visited_by, global_counts)
 
-num_markov_walks = 10000
+num_markov_walks = 15000
 source_articles = [288751132, 288751132, 269817086, 338488742, 338596025, 338667087, 287570873, 316017805, 305462143, 288730454, 338742345, 270342400, 288723335, 338652557, 288710049, 338508914, 288694479, 288709649, 338753805, 305256266, 284596369, 286506094, 276942228, 338464020, 302460613, 317303871, 273217103, 338645642, 270169879, 306444385, 288737425]
 (visited_by, global_counts) = do_random_walks(source_articles, num_markov_walks, random_walk)
 
@@ -99,11 +105,12 @@ already_in_vertices = {}
 bitly_vs_markov = {}
 total_markov_clicks = 0
 total_bitly_clicks = 0
+colors = {}
 for v in list(vertices):
     #total_count is number of times seen on 10000 random walks
     #bitly_clicks is number of bitly clicks on article according to media cloud (+1 so no node has 0 size)
     if v in source_articles:
-        color = 'orange'
+        colors[v] = 'orange'
         if v not in global_counts:
             global_counts[v] = 0
         if v not in backward_adj_list:
@@ -114,23 +121,36 @@ for v in list(vertices):
         bitly_clicks = id_to_bitly_clicks[v]
         size = num_markov_walks
     else:
-        color = 'pink'
+        colors[v] = 'pink'
         total_count = global_counts[v]
         size = total_count
         bitly_clicks = id_to_bitly_clicks[v]
     total_markov_clicks += total_count
     if math.isnan(bitly_clicks):
         total_bitly_clicks += 0.0
-        bitly_vs_markov[v] = (total_count, 0.0)
+        bitly_vs_markov[v] = (total_count, 1.0)
         print v
     elif math.isnan(total_count):
-        print v, 'fuck'
+        pass
     else:
         total_bitly_clicks += bitly_clicks
-        bitly_vs_markov[v] = (total_count, bitly_clicks)
+        bitly_vs_markov[v] = (total_count, bitly_clicks + 1.0)
 
-
-
+normed_bitly_v_markov = {v: (float(bitly_vs_markov[v][0])/float(total_markov_clicks), float(bitly_vs_markov[v][1])/float(total_bitly_clicks)) for v in bitly_vs_markov.keys()}
+bitly_markov_ratio = [np.log2(normed_bitly_v_markov[v][1] /normed_bitly_v_markov[v][0]) for v in normed_bitly_v_markov.keys()]
+std =  np.std(bitly_markov_ratio)
+mean = np.mean(bitly_markov_ratio)
+print std
+print mean
+for v in normed_bitly_v_markov.keys():
+    if np.log2(normed_bitly_v_markov[v][1]/normed_bitly_v_markov[v][0]) > mean + std:
+        print v
+        print id_to_urls[v]
+        print id_to_media[v]
+        print
+for v in colors.keys():
+    size = np.log2(normed_bitly_v_markov[v][1]/normed_bitly_v_markov[v][0]) + 1.0 + 13.7080865796
+    color = colors[v]
     nodes += str(v) + ' [size = ' + str(size) + ', color = ' + color + ', label = ' + str(id_to_media[int(v)]) + ' ]; \n'
     already_in_vertices[v] = True
 edges_in = {}
@@ -146,7 +166,6 @@ graph = graph + nodes + edges + '}'
 #P(a): what is the probability of encountering a in a random walk through top articles & their links? (markov)
 #P(b): what is the probability of encountering b given distribution of bit.ly clicks?
 print total_bitly_clicks
-normed_bitly_v_markov = {v: (float(bitly_vs_markov[v][0])/float(total_markov_clicks), float(bitly_vs_markov[v][1])/float(total_bitly_clicks)) for v in bitly_vs_markov.keys()}
 normed_markov = [normed_bitly_v_markov[v][0] for v in sorted(normed_bitly_v_markov.keys())]
 normed_bitly = [normed_bitly_v_markov[v][1] for v in sorted(normed_bitly_v_markov.keys())]
 #normed_bitly is borked
@@ -159,6 +178,6 @@ print magnitude_bitly
 print math.acos(dot / (magnitude_markov * magnitude_bitly))
 #gg-shorter-walks.dot: size is by bit-ly clicks and manually chosen "representative" stories.
 #gg-source-by-bitly-clicks: size by bit.ly clicks and representative stories are top bit.ly clicks
-with open('gg-source-by-bitly-clicks.dot', 'w') as f:
+with open('gg-graph-markov-to-bitly.dot', 'w') as f:
     f.write(graph)
     f.close()
