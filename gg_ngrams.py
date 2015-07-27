@@ -1,7 +1,7 @@
 import csv, pandas as pd, ast, numpy as np, mediacloud, json, itertools, random, time
 all_story_ids = []
 api_key = '1418b32a4e8140745240fa0b855060963c9939749bdd5562ee1b62590660b0fb'
-mc = mediacloud.api.AdminMediaCloud( api_key)
+mc = mediacloud.api.AdminMediaCloud(api_key)
 with open('stories.csv') as f:
     content = f.readlines()
     for i in content:
@@ -53,7 +53,7 @@ for story_id in bigrams.keys():
     story_vector = [bigrams[story_id][b] if b in bigrams[story_id] else 0 for b in global_bigrams.keys()]
     all_story_vectors.append(story_vector)
     story_vector_to_id[story_vector] = story_id
-with open('gg_ngrams_data_3.csv', 'w') as f:
+with open('gg_ngrams_data_2.csv', 'w') as f:
     f.write(str(all_story_vectors))
     f.write('\n')
     f.write(str(global_bigrams.keys()))
