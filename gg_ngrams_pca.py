@@ -1,21 +1,31 @@
-import csv, ast, numpy as np, itertools, matplotlib.pyplot as plt, re, scipy
+import csv, ast, numpy as np, itertools,  re, scipy
 from scipy.sparse import dok_matrix
-with open('gg_ngrams_data.csv') as f:
+with open('gg_ngrams_data_mutually_linked.csv') as f:
     content = f.readlines()
     f.close()
+
+##TODO: figure out how to find eigenvectors of very large matrix.
+##TODO: make new set of articles that is top set of articles.
+##output bigrams, stories as vectors, and matching story ids to vectors.
+##(when do clustering, want to cluster articles, not just language, so need to know which article is which.)
+
+#number of bigrams (dimensionality of dataset) is num_bigrams
+#number of columns (number of data points) is num_stories
+
 bigrams = ast.literal_eval(content[1])
 huge_matrix_str = content[0]
-A_dok = scipy.sparse.dok_matrix((269, 130638))
-A_dok_tr = scipy.sparse.dok_matrix((130638, 269))
+num_stories = 250
+num_bigrams = len(bigrams)
+A_dok = scipy.sparse.dok_matrix((num_stories, num_bigrams))
+A_dok_tr = scipy.sparse.dok_matrix((num_bigrams, num_stories))
 print len(huge_matrix_str)
 start = 1
 end = 1
 zeros = 0
 row_num = 0
 find_vectors = []
-#number of bigrams is 130638
-#number of columns is 269
-x_avg = np.zeros(130638)
+
+x_avg = np.zeros(num_bigrams)
 while end < len(huge_matrix_str):
     if huge_matrix_str[end] == ']':
         #start:end+1
@@ -35,26 +45,34 @@ while end < len(huge_matrix_str):
     else:
         end += 1
 
-x_avg = x_avg/float(130638)
+x_avg = x_avg/float(num_bigrams)
 print x_avg
 
-#X_bar = scipy.sparse.dok_matrix([x_avg for i in range(269)])
+#X_bar = scipy.sparse.dok_matrix([x_avg for i in range(num_stories)])
 #print X_bar.shape
 
 #print len(find_vectors), 'cols'
 #X_centered = scipy.sparse.dok_matrix(A_dok - X_bar)
-cov = 1.0/float(269) * A_dok_tr * (A_dok)
-print len(A_dok.keys())
+#cov = 1.0/float(num_stories) * A_dok_tr * (A_dok)
+#print len(A_dok.keys())
+print 'making cov'
+cov = scipy.sparse.dok_matrix((num_bigrams,num_bigrams))
+for t in range(num_bigrams):
+    print float(t)/float(num_bigrams)
+    for u in range(num_bigrams):
+        if t >= u:
+            cov_entry = float((A_dok_tr.getrow(t).todense()-x_avg[t]*np.ones(num_stories)).dot(np.transpose(A_dok_tr.getrow(u).todense()-x_avg[u]*np.ones(num_stories)))[0,0])
+            if cov_entry < 1.0:
+                pass
+            else:
+                cov[t,u] = 1.0/float(num_stories) * cov_entry
+                cov[u,t] = 1.0/float(num_stories) * cov_entry
+        else:
+            pass
 
-# cov = scipy.sparse.dok_matrix(130638)
-# for t in range(130638):
-#     for u in range(130638):
-#         if t >= u:
-#             cov[t,u] =
-#         else:
-#             pass
-
-
+with open('gg-ngrams-cov.csv', 'w') as f:
+    f.write(str(cov))
+    f.close()
 
 
 

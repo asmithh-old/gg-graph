@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<title>Gamergate media coverage</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
+<script>
+var gg_data = [
+{ date:2014-08-01, count: 189 },
+{ date:2014-08-08, count: 216 },
+{ date:2014-08-15, count: 215 },
+{ date:2014-08-22, count: 514 },
+{ date:2014-08-29, count: 693 },
+{ date:2014-09-05, count: 954 },
+{ date:2014-09-12, count: 888 },
+{ date:2014-09-19, count: 2311 },
+{ date:2014-09-26, count: 467 },
+{ date:2014-10-03, count: 963 },
+{ date:2014-10-10, count: 4172 },
+{ date:2014-10-17, count: 3160 },
+{ date:2014-10-24, count: 2978 },
+{ date:2014-10-31, count: 1358 },
+{ date:2014-11-07, count: 1300 },
+{ date:2014-11-14, count: 807 },
+{ date:2014-11-21, count: 662 },
+{ date:2014-11-28, count: 882 },
+{ date:2014-12-05, count: 555 },
+{ date:2014-12-12, count: 1300 },
+{ date:2014-12-19, count: 596 },
+{ date:2014-12-26, count: 352 },
+{ date:2015-01-02, count: 673 },
+{ date:2015-01-09, count: 394 },
+{ date:2015-01-16, count: 2042 },
+{ date:2015-01-23, count: 3002 },
+{ date:2015-01-30, count: 665 },
+{ date:2015-02-06, count: 2648 },
+{ date:2015-02-13, count: 438 },
+{ date:2015-02-20, count: 616 },
+{ date:2015-02-27, count: 672 },
+{ date:2015-03-06, count: 4648 },
+{ date:2015-03-13, count: 502 },
+{ date:2015-03-20, count: 378 },
+{ date:2015-03-27, count: 217 }
+];
+var svg = d3.select('svg');
+var rects = svg.selectAll('rect')
+  .data(gg_data);
+var newRects = rects.enter();
+
+
+</script>
+</html>
